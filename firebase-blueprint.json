@@ -1,0 +1,61 @@
+{
+  "entities": {
+    "Incident": {
+      "title": "Incident",
+      "description": "A reported incident by a citizen.",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string" },
+        "location": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number" },
+            "lng": { "type": "number" },
+            "address": { "type": "string" }
+          }
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Pending", "Validated", "Critical", "Resolved"]
+        },
+        "description": { "type": "string" },
+        "summary": { "type": "string" },
+        "evidenceType": {
+          "type": "string",
+          "enum": ["image", "video", "none"]
+        },
+        "evidenceUrl": { "type": "string" },
+        "citizenName": { "type": "string" },
+        "userId": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["date", "location", "status", "description", "userId", "createdAt"]
+    },
+    "Alert": {
+      "title": "Alert",
+      "description": "A safety alert broadcasted to citizens.",
+      "type": "object",
+      "properties": {
+        "timestamp": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "severity": {
+          "type": "string",
+          "enum": ["low", "medium", "high"]
+        },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["timestamp", "title", "message", "severity", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/incidents/{incidentId}": {
+      "schema": { "$ref": "#/entities/Incident" },
+      "description": "Collection of all reported incidents."
+    },
+    "/alerts/{alertId}": {
+      "schema": { "$ref": "#/entities/Alert" },
+      "description": "Collection of all safety alerts."
+    }
+  }
+}

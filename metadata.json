@@ -1,0 +1,9 @@
+{
+  "name": "Ethiopia AI Police MVP",
+  "description": "A multi-language (Oromo, Amharic, English) digital policing platform for citizens, officers, and admins in Ethiopia, powered by Gemini AI.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}

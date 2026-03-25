@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function isValidIncident() {
+      let data = request.resource.data;
+      return hasRequiredFields(['date', 'location', 'status', 'description', 'userId', 'createdAt']) &&
+             data.date is string && data.date.size() < 50 &&
+             data.location is map && data.location.keys().hasAll(['lat', 'lng']) &&
+             data.location.lat is number && data.location.lng is number &&
+             data.status in ['Pending', 'Validated', 'Critical', 'Resolved'] &&
+             data.description is string && data.description.size() < 5000 &&
+             data.createdAt is number &&
+             (!('officerLocation' in data) || (
+               data.officerLocation is map && 
+               data.officerLocation.keys().hasAll(['lat', 'lng', 'timestamp']) &&
+               data.officerLocation.lat is number && 
+               data.officerLocation.lng is number && 
+               data.officerLocation.timestamp is number
+             ));
+    }
+
+    function isValidAlert() {
+      let data = request.resource.data;
+      return hasRequiredFields(['timestamp', 'title', 'message', 'severity', 'createdAt']) &&
+             data.timestamp is string && data.timestamp.size() < 50 &&
+             data.title is string && data.title.size() < 100 &&
+             data.message is string && data.message.size() < 1000 &&
+             data.severity in ['low', 'medium', 'high'] &&
+             data.createdAt is number;
+    }
+
+    match /incidents/{incidentId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidIncident() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && isValidIncident() && request.resource.data.userId == resource.data.userId; // Allow anyone to update status for MVP demo purposes
+      allow delete: if isOwner(resource.data.userId);
+    }
+
+    match /alerts/{alertId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidAlert();
+      allow update: if isAuthenticated() && isValidAlert();
+      allow delete: if isAuthenticated();
+    }
+  }
+}
